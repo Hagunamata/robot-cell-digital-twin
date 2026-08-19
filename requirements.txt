@@ -1,19 +1,18 @@
-# Python dependencies (pinned properly as milestones land).
-# PLACEHOLDER scaffolded at M0 — listed unpinned here to record intent; do NOT
-# treat as final. Heavyweight/extra deps are a DECISION point (brief §7).
-#
-# Core sim + render (M2–M4):
-#   mujoco
-#   numpy
-#   opencv-python
-#   imageio
-#   imageio-ffmpeg
-#   pyyaml
-#
-# DROID replay bridge (M5):
-#   lerobot        # or the dataset-access path verified against the real card
-#
-# Dashboard (M6, confirm at M1):
-#   streamlit
-#
-# NOTE: Blender is NOT a pip dependency — it runs natively on the Windows host.
+# Python dependencies — M2 (headless MuJoCo sim + runner).
+# Version floors kept conservative; tighten to exact pins once verified on the
+# Ubuntu/WSL2 run target. Blender is NOT here — it runs natively on the host.
+
+mujoco>=3.1,<4          # physics + headless offscreen rendering
+numpy>=1.24
+pyyaml>=6.0             # scenario / safety config
+
+# Rendering/encoding helpers (frames now; overlay MP4 arrives in M4).
+imageio>=2.31
+imageio-ffmpeg>=0.4.9
+
+# Dev / smoke test.
+pytest>=7.4
+
+# Added later:
+#   streamlit      # dashboard (M6, confirmed at M1)
+#   lerobot        # DROID replay bridge (M5) — verify against the dataset card

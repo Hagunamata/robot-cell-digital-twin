@@ -25,11 +25,22 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M1 — config contracts defined.** The v1 scenarios and safety thresholds are
-set in `config/` (see below). Simulation, verification, and rendering logic are
-**not** implemented yet (they begin at M2). Module files are placeholders.
+**M2 — headless MuJoCo runner.** The Franka Panda loads into a work-cell scene
+and runs a scripted trajectory **headless**, logging states + contacts + camera
+frames to `outputs/` (gitignored). `make fetch-assets` + `make scenarios` work
+in WSL2/Docker. Verification (M3), overlay MP4 (M4), and the DROID bridge (M5)
+are not implemented yet.
 
-**v1 scenarios** (one per criterion; illustrative thresholds):
+**Run it** (on the WSL2/Docker target):
+
+```bash
+make up                                   # build the headless image
+make fetch-assets                         # pull the Franka model (+ lockfile)
+make scenarios SCEN=cycle_time_pickplace  # run one scenario headless
+make test                                 # smoke test
+```
+
+**v1 scenarios** (defined at M1; illustrative thresholds):
 
 | Scenario | Trajectory | Focus criterion |
 |---|---|---|
@@ -41,8 +52,8 @@ Global thresholds (`config/safety.yaml`, **illustrative** — not certified
 compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
 0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
 
-Prior: **M0** — scaffold + conception (repo structure, docs phase 1, architecture
-diagram).
+Prior: **M1** — config contracts (scenarios + thresholds). **M0** — scaffold +
+conception (repo structure, docs phase 1, architecture diagram).
 
 ---
 
@@ -67,18 +78,22 @@ See **[docs/architecture.md](docs/architecture.md)** for the diagram and
 ```
 robot-cell-digital-twin/
 ├── README.md                     # this file (asset+license table, twin-scope note)
-├── docker-compose.yml            # MuJoCo (headless) side — placeholder until M2
-├── Makefile                      # up / fetch-assets / scenarios / verify / render / report / demo
+├── Dockerfile                    # headless MuJoCo image (OSMesa, CPU)
+├── docker-compose.yml            # MuJoCo (headless) side
+├── Makefile                      # up / fetch-assets / scenarios / test / verify / render / report / demo
+├── pyproject.toml                # pytest config
 ├── .env.example                  # copy to .env
 ├── .gitignore                    # excludes outputs/ and fetched assets
-├── requirements.txt              # placeholder; pinned as milestones land
+├── requirements.txt              # mujoco, numpy, pyyaml, imageio, pytest
 ├── config/
 │   ├── scenarios/                # one YAML per scenario (defined at M1)
 │   └── safety.yaml               # global thresholds (illustrative; set at M1)
 ├── assets/
-│   ├── fetch_menagerie.py        # pulls specific Menagerie models; does NOT commit them
-│   └── cells/                    # MJCF work-cell scenes (arm + human/obstacle proxy)
-├── sim/                          # MuJoCo scenario runner + trajectory sources
+│   ├── fetch_menagerie.py        # sparse-fetches Menagerie models; does NOT commit them
+│   ├── menagerie.lock.json       # committed pin: resolved SHA + license (written by fetch)
+│   └── cells/single_arm_cell.xml # MJCF work-cell scene (Franka + human_zone_1 + cameras)
+├── sim/                          # MuJoCo runner (runner.py, trajectories.py, config.py, run.py)
+├── tests/                        # headless smoke test
 ├── droid_bridge/                 # map a DROID episode onto the MuJoCo Franka
 ├── verify/                       # reach / cycle-time / clearance checks -> verdicts
 ├── render/
@@ -98,17 +113,16 @@ robot-cell-digital-twin/
 
 ## Make targets
 
-Recipes are **stubs at M0** and get wired up in the milestone shown.
-
-| Target | Purpose | Milestone |
+| Target | Purpose | Status |
 |---|---|---|
-| `make up` | Build/start the MuJoCo container | M2 |
-| `make fetch-assets` | Pull needed Menagerie models (uncommitted) | M2 |
-| `make scenarios` | Run the v1 scenarios headless | M2 |
-| `make verify` | Reach / cycle-time / clearance → sqlite catalog | M3 |
-| `make render` | MuJoCo overlay MP4s (`HERO=1` → host Blender) | M4 / M6 |
-| `make report` | Streamlit summary + assemble `deck/` | M6 |
-| `make demo` | End-to-end: fetch → scenarios → verify → render | M6 |
+| `make up` | Build the headless MuJoCo image | ✅ M2 |
+| `make fetch-assets` | Pull needed Menagerie models (uncommitted) | ✅ M2 |
+| `make scenarios` | Run one scenario headless (`SCEN=<id>`) | ✅ M2 |
+| `make test` | Headless smoke test | ✅ M2 |
+| `make verify` | Reach / cycle-time / clearance → sqlite catalog | stub → M3 |
+| `make render` | MuJoCo overlay MP4s (`HERO=1` → host Blender) | stub → M4 / M6 |
+| `make report` | Streamlit summary + assemble `deck/` | stub → M6 |
+| `make demo` | End-to-end: fetch → scenarios → verify → render | stub → M6 |
 
 ---
 
@@ -120,13 +134,13 @@ M2). Menagerie models are **per-model licensed**; nothing is committed to git �
 
 | Asset | Source | Version / rev | License | Used in |
 |---|---|---|---|---|
-| Franka Panda (MJCF) | MuJoCo Menagerie | _TBD (verify at M2)_ | _TBD (per-model)_ | primary robot |
-| DROID episode(s) | DROID / LeRobot | _TBD (M5)_ | CC-BY 4.0 | `droid_replay` scenario |
-| _(more as added)_ | | | | |
+| Franka Emika Panda (`franka_emika_panda/panda.xml`) | [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) | pinned SHA in `assets/menagerie.lock.json` | **Apache-2.0** | primary robot |
+| DROID episode(s) | DROID / LeRobot (`lerobot/droid_100`) | _TBD (M5)_ | CC-BY 4.0 | `droid_replay` scenario |
 
-> The table is intentionally stubbed at M0. It must be filled with **verified**
-> model names, paths, revisions, and licenses before those assets are used — not
-> guessed.
+> The Franka license (Apache-2.0) and exact model path were **verified** against
+> the Menagerie repo at M2. The DROID row firms up at M5 once the episode is
+> pinned. `fetch_menagerie.py` writes the resolved SHA + license into the
+> committed lockfile.
 
 ---
 

@@ -1,0 +1,7 @@
+# Minimal project/tooling config. Packaging is intentionally light — this is a
+# portfolio scenario verifier, run via `make`, not distributed as a wheel.
+
+[tool.pytest.ini_options]
+pythonpath = ["."]          # make sim/, assets/ importable from the repo root
+testpaths = ["tests"]
+addopts = "-ra"

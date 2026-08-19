@@ -1,0 +1,69 @@
+<!--
+  single_arm_cell.xml — M2 work-cell scene.
+
+  A single Franka Panda (fetched from MuJoCo Menagerie into
+  ../menagerie/franka_emika_panda/) in a minimal work-cell with a floor, a
+  workpiece, a translucent "human_zone_1" proxy (non-colliding; used by the
+  clearance check), and two fixed cameras (front, side) for the render path.
+
+  CROSS-DIRECTORY ASSET NOTE (verified against MuJoCo docs): relative asset
+  paths resolve relative to THIS top-level file's directory, so meshdir/
+  texturedir below point at the fetched model's assets/ folder. Run
+  `make fetch-assets` first — the ../menagerie/ path is gitignored (fetched).
+
+  The added geoms are all STATIC (no joints), so the Panda "home" keyframe
+  (qpos length 9) stays valid.
+-->
+<mujoco model="single_arm_cell">
+  <compiler angle="radian" autolimits="true"
+            meshdir="../menagerie/franka_emika_panda/assets"
+            texturedir="../menagerie/franka_emika_panda/assets"/>
+
+  <!-- Franka Panda arm + hand (Apache-2.0; see README asset table). -->
+  <include file="../menagerie/franka_emika_panda/panda.xml"/>
+
+  <statistic center="0.3 0 0.4" extent="1.0"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <rgba haze="0.15 0.25 0.35 1"/>
+    <global azimuth="120" elevation="-20"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0"
+             width="512" height="3072"/>
+    <texture type="2d" name="groundplane" builtin="checker" mark="edge"
+             rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8"
+             width="300" height="300"/>
+    <material name="groundplane" texture="groundplane" texuniform="true"
+              texrepeat="5 5" reflectance="0.2"/>
+    <material name="workpiece_mat" rgba="0.85 0.55 0.15 1"/>
+    <material name="human_zone_mat" rgba="0.85 0.1 0.1 0.22"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+
+    <geom name="floor" type="plane" size="0 0 0.05" material="groundplane"/>
+
+    <!-- Pick target on the floor in front of the arm (static). -->
+    <geom name="workpiece" type="box" pos="0.5 0.0 0.02" size="0.025 0.025 0.02"
+          material="workpiece_mat"/>
+
+    <!-- Human presence proxy to the +Y side. Non-colliding (contype/conaffinity
+         = 0): it never physically interacts; the clearance check (M3) measures
+         distance to the "human_zone_1" site below. -->
+    <body name="human_zone_1" pos="0.15 0.6 0.5">
+      <geom name="human_zone_1_geom" type="box" size="0.12 0.12 0.5"
+            material="human_zone_mat" contype="0" conaffinity="0" group="2"/>
+      <site name="human_zone_1" pos="0 0 0" size="0.02" rgba="0.85 0.1 0.1 1"/>
+    </body>
+
+    <!-- Fixed cameras for the render path. xyaxes = (right; up); the camera
+         looks along -z = -(right × up), so these point back at the workspace.
+         front @ +X looks toward -X; side @ +Y looks toward -Y. -->
+    <camera name="front" pos="1.6 0.0 0.7" xyaxes="0 1 0 0 0 1"/>
+    <camera name="side"  pos="0.2 1.7 0.7" xyaxes="-1 0 0 0 0 1"/>
+  </worldbody>
+</mujoco>

@@ -1,19 +1,17 @@
 # Docker Compose — MuJoCo (headless) side only.
 #
-# PLACEHOLDER scaffolded at M0; the service + Dockerfile are wired up in M2.
-# The MuJoCo simulation and native render run HEADLESS here (EGL/OSMesa) and
-# need no GPU. Blender hero rendering is NOT part of this compose file — it is
-# a separate step run natively on the Windows host (see render/blender/).
+# The MuJoCo simulation and native render run HEADLESS here (OSMesa software GL)
+# and need no GPU. Blender hero rendering is NOT part of this compose file — it
+# is a separate step run natively on the Windows host (see render/blender/).
 
 services:
   twin:
-    # build: .                 # Dockerfile added in M2
+    build: .
     image: robot-cell-digital-twin:dev
     working_dir: /workspace
     environment:
-      - MUJOCO_GL=egl          # headless GL backend (OSMesa fallback)
-      - PYOPENGL_PLATFORM=egl
+      - MUJOCO_GL=${MUJOCO_GL:-osmesa}   # osmesa = CPU software GL; egl if a GPU is present
+      - PYOPENGL_PLATFORM=${PYOPENGL_PLATFORM:-osmesa}
     volumes:
-      - ./:/workspace
-    # No ports/GPU by default: the headless MuJoCo path is CPU-only.
+      - ./:/workspace                    # live code; outputs/ written back to host (gitignored)
     command: ["make", "help"]
