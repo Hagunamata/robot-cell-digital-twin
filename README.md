@@ -108,7 +108,8 @@ robot-cell-digital-twin/
     ├── 01-conception.md          # architecture, engine choice, twin-scope, why-not-Airflow/Isaac
     ├── 02-development.md          # implementation notes + WSL2-vs-host GPU gotcha
     ├── 03-finalization.md         # reflection + roadmap
-    └── architecture.md            # architecture diagram (Mermaid)
+    ├── architecture.md            # architecture diagram (Mermaid)
+    └── verification.md            # per-milestone run + expected-result checklist
 ```
 
 ## Make targets
