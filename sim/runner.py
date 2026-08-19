@@ -75,6 +75,10 @@ def run_scenario(scenario: Scenario, outputs_root: Path) -> RunArtifacts:
     mujoco.mj_resetDataKeyframe(model, data, home_key)
 
     traj = build_trajectory(scenario.trajectory)
+    # Seed the arm at the trajectory's starting pose so the run begins matched
+    # (no violent jump from the keyframe to a DROID replay's first frame).
+    data.qpos[:7] = traj.initial_arm
+    mujoco.mj_forward(model, data)
     data.ctrl[:] = traj.control_at(0.0)
 
     hand_id = _name2id(model, mujoco.mjtObj.mjOBJ_BODY, "hand")

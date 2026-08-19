@@ -48,11 +48,46 @@ class ScriptedTrajectory:
     def duration(self) -> float:
         return float(self._t[-1])
 
+    @property
+    def initial_arm(self) -> np.ndarray:
+        """Arm pose at t=0 (used to seed qpos so the run starts cleanly)."""
+        return np.asarray(self.waypoints[0].arm, dtype=float)
+
     def control_at(self, t: float) -> np.ndarray:
         """Return the length-8 ctrl vector at time t (clamped to [0, duration])."""
         t = float(np.clip(t, 0.0, self.duration))
         # np.interp per actuator channel over the cumulative-time knots.
         return np.array([np.interp(t, self._t, self._ctrl[:, i]) for i in range(NU)])
+
+
+@dataclass
+class DroidReplayTrajectory:
+    """Replay recorded DROID joint positions (7-DoF) with a constant gripper.
+
+    Same interface as ScriptedTrajectory (duration / initial_arm / control_at).
+    """
+
+    positions: np.ndarray          # shape (T, 7), joint angles in rad
+    fps: float
+    gripper: float = GRIPPER_OPEN
+
+    def __post_init__(self) -> None:
+        if self.positions.ndim != 2 or self.positions.shape[1] != 7:
+            raise ValueError(f"positions must be (T,7), got {self.positions.shape}")
+        self._t = np.arange(len(self.positions)) / self.fps
+
+    @property
+    def duration(self) -> float:
+        return float(self._t[-1]) if len(self._t) > 1 else 0.0
+
+    @property
+    def initial_arm(self) -> np.ndarray:
+        return np.asarray(self.positions[0], dtype=float)
+
+    def control_at(self, t: float) -> np.ndarray:
+        t = float(np.clip(t, 0.0, self.duration))
+        arm = np.array([np.interp(t, self._t, self.positions[:, j]) for j in range(7)])
+        return np.concatenate([arm, [self.gripper]])
 
 
 # --- Named scripted motions referenced by config/scenarios/*.yaml -----------
@@ -93,7 +128,7 @@ _MOTIONS = {
 }
 
 
-def build_trajectory(trajectory_cfg: dict) -> ScriptedTrajectory:
+def build_trajectory(trajectory_cfg: dict) -> "ScriptedTrajectory | DroidReplayTrajectory":
     """Build a trajectory from a scenario's `trajectory` block.
 
     Raises NotImplementedError for types wired up in later milestones.
@@ -107,5 +142,11 @@ def build_trajectory(trajectory_cfg: dict) -> ScriptedTrajectory:
     if ttype == "ik_waypoints":
         raise NotImplementedError("ik_waypoints trajectory source is a future milestone")
     if ttype == "droid_replay":
-        raise NotImplementedError("droid_replay is implemented by the M5 droid_bridge")
+        # Lazy import so the optional lerobot dependency is only touched here.
+        from droid_bridge.adapter import load_episode_joint_positions
+
+        source = trajectory_cfg.get("source")
+        episode_index = int(trajectory_cfg.get("episode_index", 0))
+        positions, fps = load_episode_joint_positions(source, episode_index)
+        return DroidReplayTrajectory(positions=positions, fps=fps)
     raise ValueError(f"Unknown trajectory type: {ttype!r}")

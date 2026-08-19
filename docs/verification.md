@@ -112,8 +112,9 @@ make scenarios SCEN=human_clearance_pickplace
 - `human_clearance_pickplace` → `sim_duration ≈ 10.0 s`; prints a finite
   `min TCP→human` value (this scenario swings toward the proxy, so it should be
   the **smallest** of the runs). 📌 ✅
-- `droid_replay_reach_check` → **raises `NotImplementedError`** ("implemented by
-  the M5 droid_bridge"). This is the correct M2 behavior, not a failure. ✅
+- `droid_replay_reach_check` → now handled by the **M5 bridge** (see the M5
+  section; needs `lerobot` or a cached episode). Before M5 landed it raised
+  `NotImplementedError` — that was the correct M2-only behavior. ✅
 
 ### 2d. Inspect the artifacts
 
@@ -261,7 +262,56 @@ make render    SCEN=human_clearance_pickplace
 - [ ] the overlay text is readable at 240×320 (bump render size in `sim/runner.py`
       if not — a value to tailor)
 
-## M5 — DROID replay bridge  _[pending]_
+## M5 — DROID replay bridge
+
+Replays a real DROID episode (`lerobot/droid_100`, Franka Panda) on the MuJoCo
+Franka. **Verified mapping:** `observation.state` = 7 joint positions (rad) →
+`actuator1..7` position targets; `action` is intentionally not used (control mode
+undocumented for droid_100); no gripper channel → gripper held open. `lerobot` is
+an **optional** dependency; once an episode is extracted it is cached to
+`assets/droid_cache/` (gitignored) so replay needs neither lerobot nor network.
+
+### 5a. Unit tests (no lerobot, no network, no mujoco)
+
+```bash
+python -m pytest tests/test_droid.py -k "trajectory or cache" -q
+```
+
+**Expected:** 3 passed — replay interpolation, shape guard, and cache loader. ✅
+
+### 5b. Extract + replay the real episode
+
+```bash
+pip install lerobot                              # optional; pulls torch (large)
+make scenarios SCEN=droid_replay_reach_check     # 1st run extracts ep 3 -> cache
+make verify    SCEN=droid_replay_reach_check
+make render    SCEN=droid_replay_reach_check
+```
+
+**Expected:**
+- First run downloads/extracts episode 3 and writes
+  `assets/droid_cache/lerobot__droid_100_ep3.npz`; later runs reuse it (no
+  network). ✅
+- `sim_duration_s ≈ T/15` where T = episode frame count. 📌
+- The Franka visibly follows the recorded DROID joint trajectory. 📌 (eyeball a
+  frame as in §2e — this is the Project-2 bridge shot)
+- Verdict: **reach** is the focus and should PASS if the episode stays in
+  envelope; **cycle_time** may FAIL if the episode is longer than 15 s (expected
+  for a real teleop episode — an illustrative, honest result). 📌
+
+> If `make scenarios SCEN=droid_replay_reach_check` raises `ImportError` about
+> lerobot, either `pip install lerobot` or drop a pre-extracted npz at the cache
+> path above. If the extracted `observation.state` isn't [T,7] the loader raises
+> a clear error (the mapping assumption is checked, not silently trusted).
+
+### M5 pass criteria (summary)
+
+- [ ] `tests/test_droid.py` unit tests pass (and the full-run test passes once
+      assets are fetched)
+- [ ] the episode extracts + caches; a second run works offline
+- [ ] the Franka tracks the DROID joint trajectory in the rendered clip
+- [ ] verdict/metrics are sensible (reach the focus; note if cycle_time FAILs by
+      episode length)
 
 ## M6 — Blender hero render (host GPU) + Streamlit + deck  _[pending]_
 

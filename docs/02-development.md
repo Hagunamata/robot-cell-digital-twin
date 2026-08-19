@@ -126,8 +126,29 @@ catalog `clip_path`. `HERO=1` is reserved for the host-side Blender step (M6).
 Known tuning knob: frames are 240×320 (from `sim/runner.py`); if the overlay text
 is cramped, raise the render size there — noted in the verification runbook.
 
-## M5+ — planned
+## M5 — DROID replay bridge
 
-- **M5** DROID replay bridge — verify the action-space mapping against the
-  dataset card.
+The Project-2 bridge: replay a real DROID episode on the MuJoCo Franka.
+
+**Verified against the dataset (not invented):** DROID = Franka Emika Panda
+7-DoF (same arm as our Menagerie model). `lerobot/droid_100` (LeRobot v3.0)
+exposes `observation.state` = float32[7] joint positions (rad), `action` =
+float32[7], fps 15, and **no gripper channel**.
+
+**Mapping decision:** replay `observation.state` (7 joint positions) as the arm
+position targets (`actuator1..7`); hold the gripper open. We deliberately do NOT
+integrate `action` — droid_100 does not document its control mode (velocity vs
+delta vs next-position), while the recorded joint configuration is unambiguous.
+The loader (`droid_bridge/adapter.py`) validates the [T,7] shape and raises if it
+differs, so the assumption is checked at load time.
+
+**Dependency posture:** `lerobot` (which pulls torch) is **optional**. The first
+extraction caches the joint array to `assets/droid_cache/` (gitignored); after
+that, replay needs neither lerobot nor network — keeping the default container
+path light. `sim/trajectories.py` wraps the array in a `DroidReplayTrajectory`
+with the same interface as the scripted one; `sim/runner.py` seeds `qpos` at the
+first frame so the replay starts matched.
+
+## M6+ — planned
+
 - **M6** Blender hero renders (host) + Streamlit summary + `deck/`.

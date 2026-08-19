@@ -9,6 +9,9 @@ outputs/*
 assets/menagerie/
 assets/**/*.mjb
 
+# Cached DROID episode joint trajectories (extracted by droid_bridge).
+assets/droid_cache/
+
 # sqlite catalog artifacts
 *.sqlite
 *.sqlite3

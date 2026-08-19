@@ -25,10 +25,11 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M4 — overlay MP4.** The headline deliverable: each run's frames get a
-verdict/metrics banner and a highlighted clearance breach, encoded to an MP4 per
-camera; the catalog `clip_path` is populated. `make render` works. The DROID
-replay bridge (M5) and Blender hero clips (M6) are not implemented yet.
+**M5 — DROID replay bridge.** The Project-2 bridge: `droid_replay_reach_check`
+now replays a real `lerobot/droid_100` episode (Franka Panda, 7 joint positions)
+on the MuJoCo Franka, then verifies + renders like any other scenario. `lerobot`
+is an optional dep; extracted episodes are cached offline. Only Blender hero
+clips + Streamlit + `deck/` (M6) and the finalization docs (M7) remain.
 
 **Run it** (on the WSL2/Docker target):
 
@@ -38,7 +39,10 @@ make fetch-assets                              # pull the Franka model (+ lockfi
 make scenarios SCEN=human_clearance_pickplace  # run headless
 make verify    SCEN=human_clearance_pickplace  # score -> verdict + catalog row
 make render    SCEN=human_clearance_pickplace  # overlay MP4 per camera
-make test                                      # smoke + verify + render tests
+make test                                      # smoke + verify + render + droid tests
+
+# DROID replay (the Project-2 bridge) — needs `pip install lerobot` once:
+make scenarios SCEN=droid_replay_reach_check   # 1st run extracts + caches ep 3
 ```
 
 **v1 scenarios** (defined at M1; illustrative thresholds):
@@ -53,8 +57,8 @@ Global thresholds (`config/safety.yaml`, **illustrative** — not certified
 compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
 0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
 
-Prior: **M3** — verifier + sqlite catalog. **M2** — headless MuJoCo runner. **M1**
-— config contracts. **M0** — scaffold + conception (repo, docs, architecture).
+Prior: **M4** — overlay MP4. **M3** — verifier + sqlite catalog. **M2** — headless
+MuJoCo runner. **M1** — config contracts. **M0** — scaffold + conception.
 
 ---
 
@@ -137,7 +141,7 @@ M2). Menagerie models are **per-model licensed**; nothing is committed to git �
 | Asset | Source | Version / rev | License | Used in |
 |---|---|---|---|---|
 | Franka Emika Panda (`franka_emika_panda/panda.xml`) | [MuJoCo Menagerie](https://github.com/google-deepmind/mujoco_menagerie) | pinned SHA in `assets/menagerie.lock.json` | **Apache-2.0** | primary robot |
-| DROID episode(s) | DROID / LeRobot (`lerobot/droid_100`) | _TBD (M5)_ | CC-BY 4.0 | `droid_replay` scenario |
+| DROID episode (`lerobot/droid_100`, ep 3) | [DROID](https://droid-dataset.github.io/) / LeRobot | LeRobot v3.0; `observation.state` = 7 joint pos | CC-BY 4.0 | `droid_replay_reach_check` |
 
 > The Franka license (Apache-2.0) and exact model path were **verified** against
 > the Menagerie repo at M2. The DROID row firms up at M5 once the episode is
