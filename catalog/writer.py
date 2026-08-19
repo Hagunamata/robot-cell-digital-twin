@@ -39,3 +39,19 @@ def write_run(db_path: Path, row: dict) -> None:
             )
     finally:
         conn.close()
+
+
+def update_clip_path(db_path: Path, scenario_id: str, run_id: str, clip_path: str) -> int:
+    """Set clip_path on matching rows. Returns the number of rows updated (0 if none)."""
+    if not db_path.exists():
+        return 0
+    conn = ensure_db(db_path)
+    try:
+        with conn:
+            cur = conn.execute(
+                "UPDATE scenario_runs SET clip_path = ? WHERE scenario_id = ? AND run_id = ?",
+                (clip_path, scenario_id, run_id),
+            )
+            return cur.rowcount
+    finally:
+        conn.close()

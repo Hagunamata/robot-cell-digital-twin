@@ -209,7 +209,57 @@ sqlite3 outputs/catalog.sqlite \
 - [ ] `human_clearance_pickplace` verdict matches its measured clearance
       (tailor the threshold if the by-design breach doesn't trigger)
 
-## M4 — overlay MP4  _[pending]_
+## M4 — overlay MP4
+
+Draws the verdict/metrics banner onto the M2 frames, highlights per-frame
+clearance breaches (red border + "CLEARANCE BREACH"), and encodes an MP4 per
+camera into the run dir. Overlay uses Pillow; encode uses imageio-ffmpeg.
+
+### 4a. Overlay unit + encode test (no mujoco/assets)
+
+```bash
+python -m pytest tests/test_render.py -q
+```
+
+**Expected:** 2 passed — `draw_overlay_frame` returns a same-shape uint8 image,
+and `render_clips` writes a non-empty `clip_front.mp4` (with a FAIL verdict from
+the synthetic clearance dip). ✅
+
+### 4b. Render a real run
+
+```bash
+make scenarios SCEN=human_clearance_pickplace
+make verify    SCEN=human_clearance_pickplace     # creates the catalog row
+make render    SCEN=human_clearance_pickplace
+```
+
+**Expected console:**
+```
+[render] scenario=human_clearance_pickplace run=<ts> verdict=<PASS|FAIL>
+[render]   clip[front] -> outputs/human_clearance_pickplace/<ts>/clip_front.mp4
+[render]   clip[side]  -> outputs/human_clearance_pickplace/<ts>/clip_side.mp4
+[render] catalog clip_path updated for run <ts>
+```
+
+**Expected artifacts:**
+- `clip_front.mp4` / `clip_side.mp4` play and show the banner
+  (`human_clearance_pickplace [VERDICT]`) with the three metric lines. ✅
+- If the clearance check fails, the frames where the TCP is inside 0.30 m show a
+  **red border + "CLEARANCE BREACH"**. 📌 (confirm the breach frames line up with
+  the arm nearest the red zone)
+- The catalog row's `clip_path` now points at the front clip:
+  ```bash
+  sqlite3 outputs/catalog.sqlite "SELECT scenario_id, verdict, clip_path FROM scenario_runs;"
+  ```
+
+### M4 pass criteria (summary)
+
+- [ ] `tests/test_render.py` → 2 passed
+- [ ] `make render` writes playable `clip_<cam>.mp4` with a legible overlay
+- [ ] breach highlight appears when/where clearance < threshold
+- [ ] catalog `clip_path` is populated after render
+- [ ] the overlay text is readable at 240×320 (bump render size in `sim/runner.py`
+      if not — a value to tailor)
 
 ## M5 — DROID replay bridge  _[pending]_
 

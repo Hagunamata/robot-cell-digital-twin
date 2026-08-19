@@ -25,19 +25,20 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M3 — verifier + sqlite catalog.** Each run's sim log is scored on reach
-envelope, cycle time, and human clearance → a PASS/FAIL verdict + metrics,
-appended to the sqlite catalog. `make verify` works. Overlay MP4 (M4) and the
-DROID bridge (M5) are not implemented yet.
+**M4 — overlay MP4.** The headline deliverable: each run's frames get a
+verdict/metrics banner and a highlighted clearance breach, encoded to an MP4 per
+camera; the catalog `clip_path` is populated. `make render` works. The DROID
+replay bridge (M5) and Blender hero clips (M6) are not implemented yet.
 
 **Run it** (on the WSL2/Docker target):
 
 ```bash
-make up                                   # build the headless image
-make fetch-assets                         # pull the Franka model (+ lockfile)
-make scenarios SCEN=cycle_time_pickplace  # run one scenario headless
-make verify    SCEN=cycle_time_pickplace  # score it -> verdict + catalog row
-make test                                 # smoke + verify tests
+make up                                        # build the headless image
+make fetch-assets                              # pull the Franka model (+ lockfile)
+make scenarios SCEN=human_clearance_pickplace  # run headless
+make verify    SCEN=human_clearance_pickplace  # score -> verdict + catalog row
+make render    SCEN=human_clearance_pickplace  # overlay MP4 per camera
+make test                                      # smoke + verify + render tests
 ```
 
 **v1 scenarios** (defined at M1; illustrative thresholds):
@@ -52,8 +53,8 @@ Global thresholds (`config/safety.yaml`, **illustrative** — not certified
 compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
 0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
 
-Prior: **M2** — headless MuJoCo runner (states/contacts/frames). **M1** — config
-contracts. **M0** — scaffold + conception (repo structure, docs, architecture).
+Prior: **M3** — verifier + sqlite catalog. **M2** — headless MuJoCo runner. **M1**
+— config contracts. **M0** — scaffold + conception (repo, docs, architecture).
 
 ---
 
@@ -121,7 +122,7 @@ robot-cell-digital-twin/
 | `make scenarios` | Run one scenario headless (`SCEN=<id>`) | ✅ M2 |
 | `make test` | Headless smoke test | ✅ M2 |
 | `make verify` | Reach / cycle-time / clearance → sqlite catalog (`SCEN=<id>`) | ✅ M3 |
-| `make render` | MuJoCo overlay MP4s (`HERO=1` → host Blender) | stub → M4 / M6 |
+| `make render` | MuJoCo overlay MP4 (`SCEN=<id>`; `HERO=1` → host Blender) | ✅ M4 (hero → M6) |
 | `make report` | Streamlit summary + assemble `deck/` | stub → M6 |
 | `make demo` | End-to-end: fetch → scenarios → verify → render | stub → M6 |
 

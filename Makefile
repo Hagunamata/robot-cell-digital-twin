@@ -18,7 +18,7 @@ help:  ## Show available targets
 	@echo "  scenarios     Run a scenario headless: make scenarios SCEN=<id>"
 	@echo "  test          Run the smoke test (pytest)"
 	@echo "  verify        Verify a run: reach/cycle-time/clearance -> catalog (SCEN=<id>)"
-	@echo "  render        [stub -> M4] overlay MP4s (HERO=1 -> host Blender, M6)"
+	@echo "  render        Overlay MP4 for a run (SCEN=<id>); HERO=1 -> host Blender (M6)"
 	@echo "  report        [stub -> M6] Streamlit summary + assemble deck/"
 	@echo "  demo          [stub -> M6] fetch-assets -> scenarios -> verify -> render"
 	@echo "  clean         Remove outputs/ contents (keeps .gitkeep)"
@@ -38,8 +38,12 @@ test:  ## Run the headless smoke test
 verify:  ## Verify a run: reach / cycle-time / clearance checks -> sqlite catalog
 	$(PY) -m verify.run --scenario config/scenarios/$(SCEN).yaml
 
-render:  ## [stub -> M4] overlaid MP4s (HERO=1 -> host-side Blender OptiX, M6)
-	@echo "[stub] make render — MuJoCo overlay in M4, Blender hero (HERO=1) in M6"
+render:  ## Overlay MP4 for a run (HERO=1 -> host-side Blender OptiX, M6)
+	@if [ "$(HERO)" = "1" ]; then \
+		echo "[stub] HERO render is the host-side Blender OptiX step — see M6 / render/blender/"; \
+	else \
+		$(PY) -m render.run --scenario config/scenarios/$(SCEN).yaml; \
+	fi
 
 report:  ## [stub -> M6] Streamlit summary + assemble deck/
 	@echo "[stub] make report — implemented in M6"

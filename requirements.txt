@@ -6,9 +6,10 @@ mujoco>=3.1,<4          # physics + headless offscreen rendering
 numpy>=1.24
 pyyaml>=6.0             # scenario / safety config
 
-# Rendering/encoding helpers (frames now; overlay MP4 arrives in M4).
+# Rendering/encoding: frames (M2), overlay drawing + MP4 encode (M4).
 imageio>=2.31
 imageio-ffmpeg>=0.4.9
+pillow>=10.0            # lightweight text/shape overlay (in place of OpenCV)
 
 # Dev / smoke test.
 pytest>=7.4

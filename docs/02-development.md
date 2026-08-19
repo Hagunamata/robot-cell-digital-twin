@@ -112,9 +112,22 @@ Illustrative modelling choices (documented, not certified):
 `asset_licenses` in each catalog row is read from `assets/menagerie.lock.json`.
 `clip_path`/`hero_clip_path` stay NULL until M4/M6.
 
-## M4+ — planned
+## M4 — overlay MP4
 
-- **M4** overlay MP4 with the verdict/metrics and highlighted breach.
+`render/mujoco/overlay.py` reads the M2 frames + the M3 verdict and draws a
+banner (verdict + one line per check) with **Pillow** (chosen over OpenCV to keep
+the dependency light), then encodes an MP4 per camera with imageio-ffmpeg
+(`libx264`), all headless. Per-frame clearance is reconstructed by interpolating
+the M2 `tcp_to_human` signal onto the frame timestamps (`frame_idx / fps`); any
+frame under the threshold gets a red border + "CLEARANCE BREACH". `render/run.py`
+(`make render SCEN=<id>`) renders the latest run and best-effort updates the
+catalog `clip_path`. `HERO=1` is reserved for the host-side Blender step (M6).
+
+Known tuning knob: frames are 240×320 (from `sim/runner.py`); if the overlay text
+is cramped, raise the render size there — noted in the verification runbook.
+
+## M5+ — planned
+
 - **M5** DROID replay bridge — verify the action-space mapping against the
   dataset card.
 - **M6** Blender hero renders (host) + Streamlit summary + `deck/`.
