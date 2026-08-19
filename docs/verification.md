@@ -155,9 +155,59 @@ visual we'll add verdict/metric overlays onto in M4.)
 
 ---
 
-## M3 — verifier (reach / cycle-time / clearance → catalog)  _[pending]_
+## M3 — verifier (reach / cycle-time / clearance → catalog)
 
-_Commands + expected verdicts/metrics to be added when M3 lands._
+The verifier reads an existing run's sim log (states.npz + meta.json) — it does
+**not** re-simulate — computes the three checks, prints a verdict, and appends a
+row to the sqlite catalog. Reach envelope + thresholds are **illustrative**.
+
+### 3a. Unit checks (no mujoco needed)
+
+```bash
+python -m pytest tests/test_verify.py -k "reach or cycle or clearance" -q
+```
+
+**Expected:** 3 passed (`check_reach`, `check_cycle_time`, `check_clearance`). ✅
+
+### 3b. Verify a run and write the catalog
+
+```bash
+make scenarios SCEN=cycle_time_pickplace     # produce a run first (if not already)
+make verify    SCEN=cycle_time_pickplace
+```
+
+**Expected console:**
+```
+[verify] scenario=cycle_time_pickplace run=<ts> dir=outputs/cycle_time_pickplace/<ts>
+[verify]   PASS  reach       max TCP reach 0.xxx m ≤ 0.835 m ...
+[verify]   PASS  cycle_time  cycle time 11.50 s ≤ 15.00 s
+[verify]   PASS  clearance   min clearance 0.xxx m ≥ 0.30 m
+[verify] VERDICT: PASS                      # 📌 confirm against real metrics
+[verify] wrote catalog row -> outputs/catalog.sqlite
+```
+- `cycle_time_pickplace` → expected **PASS** (all three). 📌
+- `human_clearance_pickplace` → the arm swings toward `human_zone_1`, so the
+  **clearance** check is the interesting one and may report **FAIL** by design
+  (this is the breach we highlight in the M4 overlay). Verdict then = FAIL. 📌 ✅
+
+### 3c. Inspect the catalog
+
+```bash
+sqlite3 outputs/catalog.sqlite \
+  "SELECT scenario_id, verdict, reach_ok, round(cycle_time_s,2), round(min_clearance_m,3) FROM scenario_runs;"
+```
+
+**Expected:** one row per `make verify` call, with verdict + metrics + a JSON
+`asset_licenses` (e.g. `{"franka_emika_panda": "Apache-2.0"}`). `clip_path` /
+`hero_clip_path` are NULL until M4 / M6. ✅
+
+### M3 pass criteria (summary)
+
+- [ ] `tests/test_verify.py` unit checks pass
+- [ ] `make verify SCEN=cycle_time_pickplace` prints a verdict and writes a row
+- [ ] the catalog holds the expected metrics; `asset_licenses` carries Apache-2.0
+- [ ] `human_clearance_pickplace` verdict matches its measured clearance
+      (tailor the threshold if the by-design breach doesn't trigger)
 
 ## M4 — overlay MP4  _[pending]_
 

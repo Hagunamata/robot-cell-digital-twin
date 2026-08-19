@@ -17,7 +17,7 @@ help:  ## Show available targets
 	@echo "  fetch-assets  Fetch Menagerie models -> assets/menagerie/ (gitignored)"
 	@echo "  scenarios     Run a scenario headless: make scenarios SCEN=<id>"
 	@echo "  test          Run the smoke test (pytest)"
-	@echo "  verify        [stub -> M3] reach/cycle-time/clearance -> catalog"
+	@echo "  verify        Verify a run: reach/cycle-time/clearance -> catalog (SCEN=<id>)"
 	@echo "  render        [stub -> M4] overlay MP4s (HERO=1 -> host Blender, M6)"
 	@echo "  report        [stub -> M6] Streamlit summary + assemble deck/"
 	@echo "  demo          [stub -> M6] fetch-assets -> scenarios -> verify -> render"
@@ -35,8 +35,8 @@ scenarios:  ## Run one scenario headless (SCEN=<scenario id>)
 test:  ## Run the headless smoke test
 	$(PY) -m pytest -q
 
-verify:  ## [stub -> M3] reach / cycle-time / clearance checks -> sqlite catalog
-	@echo "[stub] make verify — implemented in M3"
+verify:  ## Verify a run: reach / cycle-time / clearance checks -> sqlite catalog
+	$(PY) -m verify.run --scenario config/scenarios/$(SCEN).yaml
 
 render:  ## [stub -> M4] overlaid MP4s (HERO=1 -> host-side Blender OptiX, M6)
 	@echo "[stub] make render — MuJoCo overlay in M4, Blender hero (HERO=1) in M6"

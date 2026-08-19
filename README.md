@@ -25,11 +25,10 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M2 — headless MuJoCo runner.** The Franka Panda loads into a work-cell scene
-and runs a scripted trajectory **headless**, logging states + contacts + camera
-frames to `outputs/` (gitignored). `make fetch-assets` + `make scenarios` work
-in WSL2/Docker. Verification (M3), overlay MP4 (M4), and the DROID bridge (M5)
-are not implemented yet.
+**M3 — verifier + sqlite catalog.** Each run's sim log is scored on reach
+envelope, cycle time, and human clearance → a PASS/FAIL verdict + metrics,
+appended to the sqlite catalog. `make verify` works. Overlay MP4 (M4) and the
+DROID bridge (M5) are not implemented yet.
 
 **Run it** (on the WSL2/Docker target):
 
@@ -37,7 +36,8 @@ are not implemented yet.
 make up                                   # build the headless image
 make fetch-assets                         # pull the Franka model (+ lockfile)
 make scenarios SCEN=cycle_time_pickplace  # run one scenario headless
-make test                                 # smoke test
+make verify    SCEN=cycle_time_pickplace  # score it -> verdict + catalog row
+make test                                 # smoke + verify tests
 ```
 
 **v1 scenarios** (defined at M1; illustrative thresholds):
@@ -52,8 +52,8 @@ Global thresholds (`config/safety.yaml`, **illustrative** — not certified
 compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
 0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
 
-Prior: **M1** — config contracts (scenarios + thresholds). **M0** — scaffold +
-conception (repo structure, docs phase 1, architecture diagram).
+Prior: **M2** — headless MuJoCo runner (states/contacts/frames). **M1** — config
+contracts. **M0** — scaffold + conception (repo structure, docs, architecture).
 
 ---
 
@@ -120,7 +120,7 @@ robot-cell-digital-twin/
 | `make fetch-assets` | Pull needed Menagerie models (uncommitted) | ✅ M2 |
 | `make scenarios` | Run one scenario headless (`SCEN=<id>`) | ✅ M2 |
 | `make test` | Headless smoke test | ✅ M2 |
-| `make verify` | Reach / cycle-time / clearance → sqlite catalog | stub → M3 |
+| `make verify` | Reach / cycle-time / clearance → sqlite catalog (`SCEN=<id>`) | ✅ M3 |
 | `make render` | MuJoCo overlay MP4s (`HERO=1` → host Blender) | stub → M4 / M6 |
 | `make report` | Streamlit summary + assemble `deck/` | stub → M6 |
 | `make demo` | End-to-end: fetch → scenarios → verify → render | stub → M6 |

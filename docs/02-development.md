@@ -92,11 +92,28 @@ Or from the host: `docker compose run --rm twin make scenarios SCEN=...`.
 
 ---
 
-## M3+ — planned
+## M3 — verifier + sqlite catalog
 
-- **M3** verifier: reach envelope, cycle-time, human clearance → verdict +
-  metrics → sqlite catalog. (`min_tcp_to_human_m` in the M2 log is a raw signal,
-  not yet the clearance verdict.)
+The verifier **consumes the M2 sim log** (states.npz + meta.json) and does not
+re-simulate — verification is cheap and re-runnable. `verify/checks.py` holds
+three pure checks; `verify/verifier.py` aggregates them (PASS only if all
+applicable checks pass); `verify/run.py` (`make verify SCEN=<id>`) verifies the
+latest run and appends a row to the sqlite catalog (`catalog/`, schema §6.3).
+
+Illustrative modelling choices (documented, not certified):
+- **Reach envelope:** max TCP radial distance from the base must stay below
+  `FRANKA_MAX_REACH_M (0.855) − workspace_margin_m`. The 0.855 m nominal reach is
+  illustrative.
+- **Cycle time:** last logged sim time vs `max_s`.
+- **Clearance:** min of the M2 `tcp_to_human` signal vs `min_distance_m` — a
+  TCP-based proxy for full arm-to-human clearance (a fuller geom-distance version
+  is possible later).
+
+`asset_licenses` in each catalog row is read from `assets/menagerie.lock.json`.
+`clip_path`/`hero_clip_path` stay NULL until M4/M6.
+
+## M4+ — planned
+
 - **M4** overlay MP4 with the verdict/metrics and highlighted breach.
 - **M5** DROID replay bridge — verify the action-space mapping against the
   dataset card.
