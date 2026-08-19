@@ -1,0 +1,17 @@
+# Global safety thresholds.
+#
+# PLACEHOLDER — scaffolded at M0. The actual threshold VALUES are a DECISION
+# point owned by the human and are finalized at M1 (see brief §6.2, §7).
+#
+# NOTE: any values here are ILLUSTRATIVE for a portfolio demo. ISO 10218 and
+# ISO/TS 15066 are the real collaborative-robot standards; do NOT present these
+# numbers as certified compliance.
+#
+# Expected shape once finalized at M1:
+#
+# defaults:
+#   cycle_time_max_s: <TBD at M1>
+#   min_human_clearance_m: <TBD at M1>
+#   reach_workspace_margin_m: <TBD at M1>
+# verdict:
+#   on_any_fail: FAIL   # a scenario passes only if all criteria pass

@@ -1,0 +1,2 @@
+# This directory is intentionally kept, but its CONTENTS are gitignored.
+# Clips, renders, and sim logs are written here and never committed.

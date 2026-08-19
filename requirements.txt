@@ -1,0 +1,19 @@
+# Python dependencies (pinned properly as milestones land).
+# PLACEHOLDER scaffolded at M0 — listed unpinned here to record intent; do NOT
+# treat as final. Heavyweight/extra deps are a DECISION point (brief §7).
+#
+# Core sim + render (M2–M4):
+#   mujoco
+#   numpy
+#   opencv-python
+#   imageio
+#   imageio-ffmpeg
+#   pyyaml
+#
+# DROID replay bridge (M5):
+#   lerobot        # or the dataset-access path verified against the real card
+#
+# Dashboard (M6, confirm at M1):
+#   streamlit
+#
+# NOTE: Blender is NOT a pip dependency — it runs natively on the Windows host.

@@ -1,0 +1,13 @@
+# Normalize line endings to LF in the repo so it stays portable to
+# WSL2 / Docker / Ubuntu (the headless run target). Checkouts on Windows
+# still work; git stores LF.
+* text=auto eol=lf
+
+# Binary assets (never line-ending converted) — kept out of git anyway,
+# declared here for correctness if any ever land.
+*.png binary
+*.jpg binary
+*.mp4 binary
+*.mov binary
+*.blend binary
+*.mjb binary

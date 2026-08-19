@@ -1,0 +1,63 @@
+# ---------------------------------------------------------------------------
+# Outputs and fetched assets — NEVER commit large binaries (brief §2.3).
+# ---------------------------------------------------------------------------
+# Rendered clips, hero renders, sim logs, catalog db, etc.
+outputs/*
+!outputs/.gitkeep
+
+# Fetched MuJoCo Menagerie models (pulled by assets/fetch_menagerie.py).
+assets/menagerie/
+assets/**/*.mjb
+
+# sqlite catalog artifacts
+*.sqlite
+*.sqlite3
+*.db
+
+# Blender intermediates
+*.blend1
+*.exr
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.eggs/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# ---------------------------------------------------------------------------
+# Internal planning brief — not published to the repo.
+# ---------------------------------------------------------------------------
+CLAUDE_CODE_BRIEF_TWIN.md
+
+# ---------------------------------------------------------------------------
+# Environment / secrets
+# ---------------------------------------------------------------------------
+.env
+
+# ---------------------------------------------------------------------------
+# OS / editor cruft
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Large media, just in case they land outside outputs/
+*.mp4
+*.mov
+*.mkv
+# ...but keep the single committed sample frame (small PNG).
+!sample_scenario/sample_frame.png
