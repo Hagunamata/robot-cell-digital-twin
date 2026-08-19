@@ -1,0 +1,27 @@
+# Scenario: scripted pick-and-place — cycle-time check.
+# A scripted work-cell motion; verifies the run finishes within the cycle-time
+# budget. Focus criterion: cycle_time.
+#
+# Threshold precedence: values omitted below inherit config/safety.yaml defaults.
+
+id: cycle_time_pickplace
+robot: franka_panda                 # MuJoCo Menagerie — exact model dir/MJCF VERIFIED at M2
+scene: cells/single_arm_cell.xml    # authored at M2 (arm + human_zone_1 proxy)
+
+trajectory:
+  type: scripted                    # scripted | ik_waypoints | droid_replay
+  motion: pick_place                # named motion authored in sim/ at M2
+
+criteria:
+  reach:
+    workspace_margin_m: 0.02        # inherits safety.yaml default (stated for clarity)
+  cycle_time:                       # <- focus of this scenario
+    max_s: 15.0                     # inherits safety.yaml default (stated for clarity)
+  clearance:
+    obstacle_zones: [human_zone_1]
+    min_distance_m: 0.30            # inherits safety.yaml default (stated for clarity)
+
+render:
+  mujoco: true                      # headless overlay MP4 (default path, M4)
+  blender_hero: false               # hero-clip selection is a separate DECISION at M6
+  cameras: [front, side]

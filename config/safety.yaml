@@ -1,17 +1,17 @@
-# Global safety thresholds.
+# Global safety thresholds (M1).
 #
-# PLACEHOLDER — scaffolded at M0. The actual threshold VALUES are a DECISION
-# point owned by the human and are finalized at M1 (see brief §6.2, §7).
-#
-# NOTE: any values here are ILLUSTRATIVE for a portfolio demo. ISO 10218 and
+# NOTE: these values are ILLUSTRATIVE for a portfolio demo. ISO 10218 and
 # ISO/TS 15066 are the real collaborative-robot standards; do NOT present these
 # numbers as certified compliance.
 #
-# Expected shape once finalized at M1:
-#
-# defaults:
-#   cycle_time_max_s: <TBD at M1>
-#   min_human_clearance_m: <TBD at M1>
-#   reach_workspace_margin_m: <TBD at M1>
-# verdict:
-#   on_any_fail: FAIL   # a scenario passes only if all criteria pass
+# Precedence: a scenario's criteria may OVERRIDE any of these; anything a
+# scenario omits falls back to the defaults here. `obstacle_zones` is always
+# scenario-specific (defined per scenario, not here).
+
+defaults:
+  cycle_time_max_s: 15.0          # a run must finish within this wall-clock budget
+  min_human_clearance_m: 0.30     # min arm-to-human-zone distance allowed
+  reach_workspace_margin_m: 0.02  # TCP must stay inside the reachable envelope by this margin
+
+verdict:
+  on_any_fail: FAIL               # a scenario passes only if ALL its criteria pass

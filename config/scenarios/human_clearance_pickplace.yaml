@@ -1,0 +1,27 @@
+# Scenario: scripted pick-and-place near a human proxy — clearance check.
+# A scripted motion routed close to human_zone_1; verifies the arm keeps the
+# minimum separation. Focus criterion: clearance (this is the clip that shows
+# the highlighted breach in the overlay).
+#
+# Threshold precedence: values omitted below inherit config/safety.yaml defaults.
+
+id: human_clearance_pickplace
+robot: franka_panda                 # MuJoCo Menagerie — exact model dir/MJCF VERIFIED at M2
+scene: cells/single_arm_cell.xml    # authored at M2 (arm + human_zone_1 proxy)
+
+trajectory:
+  type: scripted                    # scripted | ik_waypoints | droid_replay
+  motion: pick_place_near_human     # named motion authored in sim/ at M2
+
+criteria:
+  reach:
+    workspace_margin_m: 0.02        # inherits safety.yaml default (stated for clarity)
+  cycle_time: {}                    # inherits safety.yaml default (15.0 s)
+  clearance:                        # <- focus of this scenario
+    obstacle_zones: [human_zone_1]
+    min_distance_m: 0.30            # inherits safety.yaml default (stated for clarity)
+
+render:
+  mujoco: true                      # headless overlay MP4 (default path, M4)
+  blender_hero: false               # hero-clip selection is a separate DECISION at M6
+  cameras: [front, side]

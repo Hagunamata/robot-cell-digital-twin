@@ -25,9 +25,24 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M0 — scaffold + conception.** Repository structure, docs phase 1, and the
-architecture diagram are in place. Simulation, verification, and rendering logic
-are **not** implemented yet (they begin at M2). Module files are placeholders.
+**M1 — config contracts defined.** The v1 scenarios and safety thresholds are
+set in `config/` (see below). Simulation, verification, and rendering logic are
+**not** implemented yet (they begin at M2). Module files are placeholders.
+
+**v1 scenarios** (one per criterion; illustrative thresholds):
+
+| Scenario | Trajectory | Focus criterion |
+|---|---|---|
+| `droid_replay_reach_check` | `droid_replay` (lerobot/droid_100 → Franka) | reach envelope |
+| `cycle_time_pickplace` | `scripted` (pick_place) | cycle time |
+| `human_clearance_pickplace` | `scripted` (pick_place_near_human) | human clearance |
+
+Global thresholds (`config/safety.yaml`, **illustrative** — not certified
+compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
+0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
+
+Prior: **M0** — scaffold + conception (repo structure, docs phase 1, architecture
+diagram).
 
 ---
 
