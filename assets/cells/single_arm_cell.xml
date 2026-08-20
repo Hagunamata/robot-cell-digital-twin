@@ -7,20 +7,29 @@
   clearance check), and two fixed cameras (front, side) for the render path.
 
   CROSS-DIRECTORY ASSET NOTE (verified against MuJoCo docs): relative asset
-  paths resolve relative to THIS top-level file's directory, so meshdir/
-  texturedir below point at the fetched model's assets/ folder. Run
-  `make fetch-assets` first — the ../menagerie/ path is gitignored (fetched).
+  paths resolve relative to THIS top-level file's directory. BUT the included
+  panda.xml carries its own <compiler meshdir="assets">, and MuJoCo applies the
+  LAST compiler element in document order — so it would win over ours and
+  resolve "assets" against THIS file's directory (assets/cells/), which is
+  wrong. We therefore re-assert meshdir/texturedir with a <compiler> element
+  placed AFTER the <include> so ours wins. Run `make fetch-assets` first — the
+  ../menagerie/ path is gitignored (fetched).
 
   The added geoms are all STATIC (no joints), so the Panda "home" keyframe
   (qpos length 9) stays valid.
 -->
 <mujoco model="single_arm_cell">
-  <compiler angle="radian" autolimits="true"
-            meshdir="../menagerie/franka_emika_panda/assets"
-            texturedir="../menagerie/franka_emika_panda/assets"/>
+  <compiler angle="radian" autolimits="true"/>
 
   <!-- Franka Panda arm + hand (Apache-2.0; see README asset table). -->
   <include file="../menagerie/franka_emika_panda/panda.xml"/>
+
+  <!-- Re-assert asset dirs AFTER the include (see CROSS-DIRECTORY ASSET NOTE):
+       panda.xml sets meshdir="assets" relative to ITS own location, but MuJoCo
+       resolves it against this top-level file. Placing our compiler last makes
+       these paths win, so meshes resolve to the fetched model's assets/ dir. -->
+  <compiler meshdir="../menagerie/franka_emika_panda/assets"
+            texturedir="../menagerie/franka_emika_panda/assets"/>
 
   <statistic center="0.3 0 0.4" extent="1.0"/>
 
