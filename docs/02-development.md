@@ -164,6 +164,31 @@ end-to-end against lerobot 0.6.1 + datasets 4.8.5: `lerobot/droid_100` ep 3
 extracts to [205,7] @ 15 fps, replays in 13.6 s, verdict PASS, and the cached
 second run imports no lerobot at all. See docs/verification.md §5b.
 
-## M6+ — planned
+## M6 — Blender hero render (host) + Streamlit + deck
 
-- **M6** Blender hero renders (host) + Streamlit summary + `deck/`.
+- **Deck** (`deck/build_deck.py`, `make report`): reads the latest run per
+  scenario (`catalog/reader.py`) and writes `deck/slide_outline.md` — title +
+  honest-scope slides, then one slide per scenario with verdict/metrics/clip,
+  flagging the recommended hero scenarios.
+- **Dashboard** (`dashboard/app.py`, `make dashboard`): Streamlit reads the same
+  catalog and embeds the overlay (and hero) clips. Streamlit is now a real dep.
+- **Blender hero render** — split across the WSL2/host boundary on purpose:
+  - `render/blender/export_scene.py` (`make render HERO=1`) runs **headless in
+    WSL2/Docker**: it replays the run's `qpos` through `mj_forward` and dumps each
+    visual mesh geom's **world pose per frame** + the camera + mesh file refs to
+    `blender_export/`. This decouples Blender from MuJoCo kinematics — Blender
+    just plays back recorded rigid-body transforms on the fetched meshes.
+  - `render/blender/hero_render.py` runs on the **Windows host** under Blender's
+    Python (`blender --background --python …`): imports the meshes, keyframes the
+    transforms, sets the camera/lighting, enables **OptiX**, and renders Cycles.
+    Import operators + OptiX enabling differ across Blender 3.6/4.x, so the script
+    is defensive but expect per-version tweaks (host-verified, like the M5 loop).
+
+**Why the split:** GPU passthrough into WSL2/Docker isn't assumed, so the only
+GPU step is host-native Blender; everything else (sim, verify, overlay, export,
+deck, dashboard) stays CPU-only and container-friendly.
+
+## M7 — planned
+
+- Finalization docs (`03-finalization.md`), README license audit, confirm no
+  large binaries committed.

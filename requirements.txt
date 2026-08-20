@@ -11,6 +11,9 @@ imageio>=2.31
 imageio-ffmpeg>=0.4.9
 pillow>=10.0            # lightweight text/shape overlay (in place of OpenCV)
 
+# Dashboard (M6).
+streamlit>=1.31        # reads the sqlite catalog; `streamlit run dashboard/app.py`
+
 # Dev / smoke test.
 pytest>=7.4
 

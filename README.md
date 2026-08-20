@@ -25,24 +25,27 @@ episode on the same Franka Panda** inside the twin.
 
 ## Status
 
-**M5 — DROID replay bridge.** The Project-2 bridge: `droid_replay_reach_check`
-now replays a real `lerobot/droid_100` episode (Franka Panda, 7 joint positions)
-on the MuJoCo Franka, then verifies + renders like any other scenario. `lerobot`
-is an optional dep; extracted episodes are cached offline. Only Blender hero
-clips + Streamlit + `deck/` (M6) and the finalization docs (M7) remain.
+**M6 — Blender hero render + Streamlit + deck.** The full pipeline is wired:
+`make demo` runs the scripted scenarios end-to-end and assembles
+`deck/slide_outline.md`; `make dashboard` serves the Streamlit summary; and
+`make render HERO=1` exports geometry for a photoreal **Blender OptiX** clip
+rendered on the Windows host. Only the finalization docs (M7) remain.
 
-**Run it** (on the WSL2/Docker target):
+**Run it** (default path — Ubuntu/WSL2, no GPU):
 
 ```bash
 make up                                        # build the headless image
 make fetch-assets                              # pull the Franka model (+ lockfile)
-make scenarios SCEN=human_clearance_pickplace  # run headless
-make verify    SCEN=human_clearance_pickplace  # score -> verdict + catalog row
-make render    SCEN=human_clearance_pickplace  # overlay MP4 per camera
-make test                                      # smoke + verify + render + droid tests
+make demo                                      # scripted scenarios -> clips + catalog + deck
+make dashboard                                 # Streamlit summary (needs streamlit)
+make test                                      # full test suite
 
-# DROID replay (the Project-2 bridge) — needs `pip install lerobot` once:
+# DROID replay bridge — needs `pip install 'lerobot[dataset]'` once:
 make scenarios SCEN=droid_replay_reach_check   # 1st run extracts + caches ep 3
+
+# Photoreal hero clip — export here, then render on the Windows host (RTX):
+make render HERO=1 SCEN=droid_replay_reach_check
+# then run the printed `blender --background --python render/blender/hero_render.py ...`
 ```
 
 **v1 scenarios** (defined at M1; illustrative thresholds):
@@ -57,8 +60,8 @@ Global thresholds (`config/safety.yaml`, **illustrative** — not certified
 compliance): cycle-time ≤ 15.0 s · min human clearance 0.30 m · reach margin
 0.02 m · a scenario passes only if all criteria pass. Dashboard: **Streamlit**.
 
-Prior: **M4** — overlay MP4. **M3** — verifier + sqlite catalog. **M2** — headless
-MuJoCo runner. **M1** — config contracts. **M0** — scaffold + conception.
+Prior: **M5** — DROID replay bridge. **M4** — overlay MP4. **M3** — verifier +
+catalog. **M2** — headless runner. **M1** — config contracts. **M0** — scaffold.
 
 ---
 
@@ -126,9 +129,10 @@ robot-cell-digital-twin/
 | `make scenarios` | Run one scenario headless (`SCEN=<id>`) | ✅ M2 |
 | `make test` | Headless smoke test | ✅ M2 |
 | `make verify` | Reach / cycle-time / clearance → sqlite catalog (`SCEN=<id>`) | ✅ M3 |
-| `make render` | MuJoCo overlay MP4 (`SCEN=<id>`; `HERO=1` → host Blender) | ✅ M4 (hero → M6) |
-| `make report` | Streamlit summary + assemble `deck/` | stub → M6 |
-| `make demo` | End-to-end: fetch → scenarios → verify → render | stub → M6 |
+| `make render` | MuJoCo overlay MP4 (`SCEN=<id>`; `HERO=1` → export for host Blender) | ✅ M4 / M6 |
+| `make report` | Assemble `deck/slide_outline.md` from the catalog | ✅ M6 |
+| `make dashboard` | Launch the Streamlit summary | ✅ M6 |
+| `make demo` | End-to-end: fetch → scenarios → verify → render → deck | ✅ M6 |
 
 ---
 

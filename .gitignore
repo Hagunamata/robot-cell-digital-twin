@@ -12,6 +12,9 @@ assets/**/*.mjb
 # Cached DROID episode joint trajectories (extracted by droid_bridge).
 assets/droid_cache/
 
+# Local per-milestone clip/screenshot review folder (scratch, not a deliverable).
+Videos/
+
 # sqlite catalog artifacts
 *.sqlite
 *.sqlite3

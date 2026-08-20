@@ -332,6 +332,85 @@ make render    SCEN=droid_replay_reach_check
 - [ ] verdict/metrics are sensible (reach the focus; note if cycle_time FAILs by
       episode length)
 
-## M6 — Blender hero render (host GPU) + Streamlit + deck  _[pending]_
+## M6 — Blender hero render (host GPU) + Streamlit + deck
+
+Three pieces: (1) the **deck** builder assembles `deck/slide_outline.md` from the
+catalog; (2) the **Streamlit** dashboard reads the catalog and embeds clips; (3)
+the **Blender OptiX hero render** runs on the Windows host from a WSL2-exported
+geometry file. The default headless path (deck + dashboard + export) has no GPU
+dependency; only the final Blender step uses the RTX card.
+
+### 6a. Report/deck + reader unit tests (no mujoco/streamlit/blender)
+
+```bash
+python -m pytest tests/test_report.py -k "reader or outline" -q
+```
+
+**Expected:** 4 passed — catalog reader (missing db + latest-per-scenario) and
+the deck outline builder (hero flag + metrics + empty case). ✅
+
+### 6b. End-to-end demo (scripted scenarios)
+
+```bash
+make demo        # fetch-assets -> (scenarios -> verify -> render) x2 -> deck
+```
+
+**Expected:**
+- Runs `cycle_time_pickplace` and `human_clearance_pickplace` through sim →
+  verify → render, then writes `deck/slide_outline.md`. ✅
+- `deck/slide_outline.md` has a title + honest-scope slide, one slide per
+  scenario (verdict + metrics + `clip_path`), with the two recommended scenarios
+  flagged *(hero clip)*. 📌
+- To include the DROID bridge: `pip install 'lerobot[dataset]'` then
+  `make demo DEMO_SCENARIOS="cycle_time_pickplace human_clearance_pickplace droid_replay_reach_check"`.
+
+### 6c. Streamlit dashboard
+
+```bash
+make dashboard        # streamlit run dashboard/app.py
+```
+
+**Expected:** a page titled "Robot-Cell Digital Twin — Scenario Verifier" with
+the honest-scope caption, PASS/FAIL counts, one section per scenario (reach ok,
+cycle time, min clearance) embedding `clip_front.mp4`, and an "All runs" table. ✅
+
+### 6d. Export geometry for the hero render (WSL2/Docker, headless)
+
+```bash
+make render HERO=1 SCEN=droid_replay_reach_check
+```
+
+**Expected:** writes `outputs/droid_replay_reach_check/<run>/blender_export/`
+containing `manifest.json` (geoms + camera + fps) and `transforms.npz`
+(per-frame world poses), then prints the exact host Blender command. ✅
+
+### 6e. Blender OptiX hero render (Windows HOST, RTX card)
+
+Run the printed command on the host (Blender installed), e.g.:
+
+```bash
+blender --background --python render/blender/hero_render.py -- \
+  --export "outputs/droid_replay_reach_check/<run>/blender_export" \
+  --out    "outputs/droid_replay_reach_check/<run>/hero_front.mp4" \
+  --samples 64 --resolution 1280 720
+```
+
+**Expected:** `[hero] backend=OPTIX ...` then a photoreal `hero_front.mp4` of the
+Franka following the trajectory. 📌 **Trial-and-error expected here** (this is the
+one milestone I could not run): the mesh-import operator and OptiX-enable calls
+differ across Blender 3.6/4.x — the script handles both defensively but may need
+a tweak for your exact version. Copy the hero clip(s) into `deck/` for the deck.
+
+> `hero_clip_path` in the catalog stays NULL unless you set it (the host render is
+> outside the WSL2 pipeline); the deck outline already points at the expected host
+> path for the recommended hero scenarios.
+
+### M6 pass criteria (summary)
+
+- [ ] `tests/test_report.py` reader/outline tests pass (export smoke passes with assets)
+- [ ] `make demo` produces clips + catalog rows + `deck/slide_outline.md`
+- [ ] `make dashboard` shows verdicts/metrics and plays the overlay clips
+- [ ] `make render HERO=1` writes a `blender_export/` and prints the host command
+- [ ] the host Blender render produces a photoreal hero clip (note any version tweaks)
 
 ## M7 — finalization  _[pending]_
