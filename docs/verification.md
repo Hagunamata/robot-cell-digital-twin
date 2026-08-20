@@ -292,27 +292,36 @@ python -m pytest tests/test_droid.py -k "trajectory or cache" -q
 ### 5b. Extract + replay the real episode
 
 ```bash
-pip install lerobot                              # optional; pulls torch (large)
+pip install 'lerobot[dataset]'                   # optional; pulls torch + HF datasets (large)
 make scenarios SCEN=droid_replay_reach_check     # 1st run extracts ep 3 -> cache
 make verify    SCEN=droid_replay_reach_check
 make render    SCEN=droid_replay_reach_check
 ```
 
-**Expected:**
-- First run downloads/extracts episode 3 and writes
-  `assets/droid_cache/lerobot__droid_100_ep3.npz`; later runs reuse it (no
-  network). ✅
-- `sim_duration_s ≈ T/15` where T = episode frame count. 📌
-- The Franka visibly follows the recorded DROID joint trajectory. 📌 (eyeball a
+> **Install note (lerobot ≥ 0.5 / v3.0 dataset format).** Use the `[dataset]`
+> extra, **not** plain `pip install lerobot` — the base package omits the
+> HuggingFace `datasets` dependency that `LeRobotDataset` needs (you'll get
+> `'datasets' is required but not installed`). The bridge targets the v3.0 API
+> (`LeRobotDataset(repo_id, episodes=[idx], download_videos=False)`); the older
+> `episode_data_index` frame-range API was removed upstream. Verified against
+> lerobot 0.6.1 + datasets 4.8.5.
+
+**Expected (observed first run — `lerobot/droid_100`, episode 3):**
+- First run downloads/extracts episode 3 (T = **205 frames**) and writes
+  `assets/droid_cache/lerobot__droid_100_ep3.npz`; later runs reuse it with **no
+  network and no lerobot import**. ✅
+- `sim_duration_s ≈ T/15 = 13.6 s`. ✅
+- The Franka visibly follows the recorded DROID joint trajectory. ✅ (eyeball a
   frame as in §2e — this is the Project-2 bridge shot)
-- Verdict: **reach** is the focus and should PASS if the episode stays in
-  envelope; **cycle_time** may FAIL if the episode is longer than 15 s (expected
-  for a real teleop episode — an illustrative, honest result). 📌
+- Verdict **PASS**: reach `0.406 m ≤ 0.840 m`, cycle_time `13.58 s ≤ 15.00 s`,
+  clearance `0.505 m ≥ 0.30 m`. (This episode stays inside the cycle-time budget;
+  a longer teleop episode could legitimately FAIL cycle_time — an honest result.) ✅
 
 > If `make scenarios SCEN=droid_replay_reach_check` raises `ImportError` about
-> lerobot, either `pip install lerobot` or drop a pre-extracted npz at the cache
-> path above. If the extracted `observation.state` isn't [T,7] the loader raises
-> a clear error (the mapping assumption is checked, not silently trusted).
+> lerobot, either `pip install 'lerobot[dataset]'` or drop a pre-extracted npz at
+> the cache path above. If the extracted `observation.state` isn't [T,7] the
+> loader raises a clear error (the mapping assumption is checked, not silently
+> trusted).
 
 ### M5 pass criteria (summary)
 

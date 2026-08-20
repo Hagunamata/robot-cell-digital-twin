@@ -149,6 +149,21 @@ path light. `sim/trajectories.py` wraps the array in a `DroidReplayTrajectory`
 with the same interface as the scripted one; `sim/runner.py` seeds `qpos` at the
 first frame so the replay starts matched.
 
+**lerobot v3.0 API migration (verification finding).** The original
+`_extract_via_lerobot` used the pre-v3.0 loader API — `ds.episode_data_index`
+plus absolute frame-range slicing `hf_dataset[from:to]`, with a fallback to the
+old `lerobot.common.datasets` module path. Both were removed upstream. On the
+current `pip install`'d lerobot (0.6.1), that path raised a misleading
+`ModuleNotFoundError: lerobot.common.datasets` because plain `pip install
+lerobot` also omits the HuggingFace `datasets` dependency (it lives in the
+`[dataset]` extra). Migrated the adapter to the v3.0 API:
+`LeRobotDataset(repo_id, episodes=[idx], download_videos=False)` — the episode
+is selected at construction and `hf_dataset` then holds only its frames — and
+updated the install guidance to `pip install 'lerobot[dataset]'`. Verified
+end-to-end against lerobot 0.6.1 + datasets 4.8.5: `lerobot/droid_100` ep 3
+extracts to [205,7] @ 15 fps, replays in 13.6 s, verdict PASS, and the cached
+second run imports no lerobot at all. See docs/verification.md §5b.
+
 ## M6+ — planned
 
 - **M6** Blender hero renders (host) + Streamlit summary + `deck/`.

@@ -15,8 +15,11 @@ pillow>=10.0            # lightweight text/shape overlay (in place of OpenCV)
 pytest>=7.4
 
 # Optional / added later:
-#   lerobot        # OPTIONAL (M5 DROID replay). Pulls torch — install only when
-#                  # extracting a DROID episode: `pip install lerobot`. Once the
-#                  # episode is cached (assets/droid_cache/), replay needs neither
-#                  # lerobot nor network.
+#   lerobot[dataset]  # OPTIONAL (M5 DROID replay). Pulls torch + HF datasets —
+#                  # install only when extracting a DROID episode:
+#                  # `pip install 'lerobot[dataset]'` (the [dataset] extra is
+#                  # required; plain `lerobot` omits HF `datasets`). Targets the
+#                  # v3.0 dataset API (verified: lerobot 0.6.1). Once the episode
+#                  # is cached (assets/droid_cache/), replay needs neither lerobot
+#                  # nor network.
 #   streamlit      # dashboard (M6, confirmed at M1)

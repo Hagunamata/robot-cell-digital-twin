@@ -37,16 +37,18 @@ def _cache_path(source: str, episode_index: int) -> Path:
 
 
 def _extract_via_lerobot(source: str, episode_index: int) -> tuple[np.ndarray, float]:
-    """Extract one episode's joint positions using the optional lerobot package."""
-    try:  # module path moved across lerobot versions — try both.
-        from lerobot.datasets.lerobot_dataset import LeRobotDataset
-    except ImportError:
-        from lerobot.common.datasets.lerobot_dataset import LeRobotDataset
+    """Extract one episode's joint positions using the optional lerobot package.
 
-    ds = LeRobotDataset(source)
-    efrom = int(ds.episode_data_index["from"][episode_index])
-    eto = int(ds.episode_data_index["to"][episode_index])
-    rows = ds.hf_dataset.with_format("numpy")[efrom:eto]      # no video decode
+    Targets the lerobot v3.0 dataset API (lerobot >= 0.5): the episode is
+    selected at construction via ``episodes=[...]`` and ``hf_dataset`` then holds
+    only that episode's frames, in order. (The pre-v3.0 ``episode_data_index``
+    with absolute frame-range slicing was removed in the v3.0 rewrite.) Videos
+    are not downloaded — we read only the ``observation.state`` column.
+    """
+    from lerobot.datasets.lerobot_dataset import LeRobotDataset
+
+    ds = LeRobotDataset(source, episodes=[episode_index], download_videos=False)
+    rows = ds.hf_dataset.with_format("numpy")[:]      # this episode's frames only
     positions = np.asarray(rows["observation.state"], dtype=np.float32)
     if positions.ndim != 2 or positions.shape[1] != N_JOINTS:
         raise ValueError(
@@ -72,8 +74,10 @@ def load_episode_joint_positions(
         positions, fps = _extract_via_lerobot(source, episode_index)
     except ImportError as exc:
         raise ImportError(
-            "DROID replay needs the optional 'lerobot' package (pip install lerobot), "
-            f"or a pre-extracted cache at {cache}. See docs/verification.md (M5)."
+            "DROID replay needs the optional lerobot dataset stack "
+            "(pip install 'lerobot[dataset]' — the plain 'lerobot' package omits "
+            f"the required 'datasets' extra), or a pre-extracted cache at {cache}. "
+            "See docs/verification.md (M5)."
         ) from exc
 
     if use_cache:
