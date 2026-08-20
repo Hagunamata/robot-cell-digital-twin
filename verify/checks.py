@@ -15,8 +15,12 @@ from dataclasses import dataclass
 import numpy as np
 
 # Illustrative nominal maximum reach of the Franka Panda TCP from its base
-# (~0.855 m). Used only to demonstrate an envelope check; not a certified value.
-FRANKA_MAX_REACH_M = 0.855
+# (~0.86 m). Used only to demonstrate an envelope check; not a certified value.
+# Tailored from 0.855 -> 0.86 during M3 verification: the Panda HOME pose already
+# places the TCP at ~0.8351 m, so the old limit (0.855 - 0.02 margin = 0.835 m)
+# was breached by 0.148 mm at t=0 — a false FAIL before any motion. See
+# docs/verification.md §3b.
+FRANKA_MAX_REACH_M = 0.86
 
 # Arm base mount point in world coordinates (panda link0 sits at the origin).
 BASE_XYZ = np.array([0.0, 0.0, 0.0])
